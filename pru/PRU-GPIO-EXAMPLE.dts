@@ -1,0 +1,77 @@
+/dts-v1/;
+/plugin/;
+
+/{
+compatible = "ti,beaglebone", "ti,beaglebone-black", "ti,beaglebone-green";
+
+    // identification
+    part-number = "PRU-GPIO-EXAMPLE";
+    version = "00A0";
+
+    // resources
+    exclusive-use =
+        "P8.13",
+        "pru0";
+
+
+    // pinmux
+    fragment@0 {
+        target = <&am33xx_pinmux>;
+        __overlay__ {
+
+            P8_13_default_pin: pinmux_P8_13_default_pin {
+                pinctrl-single,pins = <0x24 0x37>;
+            };
+	    P8_13_gpio_pin: pinmux_P8_13_gpio_pin {
+		pinctrl-single,pins = <0x24 0x3f>;
+	    };
+
+        };
+    };
+
+
+    // PRU
+    fragment@1 {
+        target = <&ocp>;
+        __overlay__ {
+		P8_13_pinmux {
+			compatible = "bone-pinmux-helper";
+			status = "okay";
+			pinctrl-names = "default", "gpio";
+			pinctrl-0 = <&P8_13_default_pin>;
+			pinctrl-1 = <&P8_13_gpio_pin>;
+		};
+        };
+    };
+
+    fragment@2 {
+        target = <&ocp>;
+        __overlay__ {
+
+		// !!!WARNING!!!
+		// gpio-of-helper &gpio pointers are off-by-one vs. the hardware:
+		//   hardware GPIO bank 0 = &gpio1
+		cape {
+			compatible = "gpio-of-helper";
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <>;
+
+			P8_13 {
+				gpio-name = "P8_13";
+				gpio = <&gpio1 23 0>;
+				input;
+				dir-changeable;
+			};
+		};
+        };
+    };
+
+    fragment@3 {
+        target = <&pruss>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+
+};
