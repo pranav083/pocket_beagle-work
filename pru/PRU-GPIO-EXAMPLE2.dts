@@ -1,0 +1,68 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+compatible = "ti,beaglebone", "ti,beaglebone-black", "ti,beaglebone-green";
+
+    // identification
+    part-number = "PRU-GPIO-EXAMPLE2";
+    version = "00A0";
+
+    // resources
+    exclusive-use =
+        "P8.11",
+		"P8.12",
+		"P8.13",
+		"P8.15",
+		"P8.20",
+		"P8.21",
+		"pru0",
+		"P9.12",
+		"P9.24",
+        "pru1";
+
+
+    // pinmux
+    fragment@0 {
+        target = <&am33xx_pinmux>;
+        __overlay__ {
+	    pinctrl_test: PRU-GPIO-EXAMPLE2-pins{
+		pinctrl-single,pins= <
+			0x034 0x36 /* p8_11 45  gpio1_13 in pu mode6 */
+			0x030 0x27 /* p8_12 44  gpio1_12 in pd mode7 */
+			0x024 0x07 /* p8_13 23  gpio0_23 op pd mode7 */
+			0x03c 0x07 /* p8_15 47  gpio1_15 op pd mode7 */
+			0x084 0x37 /* p8_20 63  gpio1_31 in pd mode7 */
+			0x080 0x37 /* p8_21 62  gpio1_30 in pd mode7 */			
+			0x078 0x0f /* p9_12 60  gpio1_13 op none mode7 */
+             	        0x184 0x27 /* p9_24 15  gpio1_28 in pd mode7 */
+	               /* OUTPUT  GPIO(mode7) 0x07 pulldown, 0x17 pullup, 0x?f no pullup/down */
+			       /* INPUT   GPIO(mode7) 0x27 pulldown, 0x37 pullup, 0x?f no pullup/down */
+		>;
+            };
+
+        };
+    };
+
+
+    // PRU
+    fragment@1 {
+        target = <&ocp>;
+        __overlay__ {
+		test_helper: helper {
+			compatible = "bone-pinmux-helper";
+			status = "okay";
+			pinctrl-names = "default", "gpio";
+			pinctrl-0 = <&pinctrl_test>;
+		};
+        };
+    };
+
+    fragment@2 {
+        target = <&pruss>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+
+};
