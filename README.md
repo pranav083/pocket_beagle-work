@@ -15,8 +15,8 @@ The folders have interfacing with following :
 4. Pocket beagle interface with swift register 74hc299 with 16x2 lcd display module 
 5. Pocket beagle interface with swift register 74hc299 with 4 seven segment dispaly 
 
-see the youtube video : https://youtu.be/dBE2C6aXK7E
-see the intro video on : https://www.youtube.com/watch?v=ZZDT6jNslqw
-see the progress video on : https://www.youtube.com/watch?v=yTIs10-VrbM
+see the youtube video : https://youtu.be/dBE2C6aXK7E  
+see the intro video on : https://www.youtube.com/watch?v=ZZDT6jNslqw  
+see the progress video on : https://www.youtube.com/watch?v=yTIs10-VrbM  
 
 Thanks for viewing it if any issue please tell !!!
