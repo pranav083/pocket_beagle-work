@@ -15,8 +15,15 @@ The folders have interfacing with following :
 4. Pocket beagle interface with swift register 74hc299 with 16x2 lcd display module 
 5. Pocket beagle interface with swift register 74hc299 with 4 seven segment dispaly 
 
+<<<<<<< HEAD
 see the youtube video : https://youtu.be/dBE2C6aXK7E  
 see the intro video on : https://www.youtube.com/watch?v=ZZDT6jNslqw  
 see the progress video on : https://www.youtube.com/watch?v=yTIs10-VrbM  
+=======
+Using the GPIO pin that have not been muxed with other function in Pocket Beagle
+![alt text](https://github.com/pranav083/pocket_beagle-work/blob/master/gpio2.png)
+
+see the youtube video : https://youtu.be/dBE2C6aXK7E
+>>>>>>> d496ba1f9bc6a73169ee7ba362e59e5cc586c9e1
 
 Thanks for viewing it if any issue please tell !!!
