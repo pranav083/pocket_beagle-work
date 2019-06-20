@@ -1,0 +1,16 @@
+{signal: [
+  {name: '<b>SRCLK</b>', wave: 'lhlhlhlhlhlhlhlhlhlhlhlhlhlhlhlhl'},
+  {name: '<b>SER</b>', wave: 'l.h.l.................h.l........'},
+  {name: '<b>RCLK', wave: '0...hlhlhlhlhlhlhlhlhl..hl....hl'},  
+  {name: '<b><o>SRCLK</o>', wave: '0.h..........................l.hl'},
+  {name: '<b><o>OE</o>', wave: 'l....................h...l.......'},
+  {name: '<b>Qa</b>', wave: '....h.l..............    h.l......'},
+  {name: '<b>Qb</b>', wave: '....l.h.l............    l........'},
+  {name: '<b>Qc</b>', wave: '....l...h.l..........    l........'},
+  {name: '<b>Qd</b>', wave: '....l.....h.l........    l........'},
+  {name: '<b>Qe</b>', wave: '....l.......h.l......    l........'},
+  {name: '<b>Qf</b>', wave: '....l.........h.l....    l........'},
+  {name: '<b>Qg</b>', wave: '....l...........h.l..    l........'},
+  {name: '<b>Qh</b>', wave: '....l.............h.l    l........'},
+  {name: '<b><o>Qh</o></b>', wave: 'l................h.l..............'},
+]}
