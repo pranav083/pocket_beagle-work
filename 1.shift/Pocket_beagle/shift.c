@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,15 +11,15 @@
  /****************************************************************
  * global
  ****************************************************************/
-	unsigned int data,clk,latch;
-	unsigned int  registers[8];
-    int data1,clk1,latch1;
+unsigned int data,clk,latch;
+unsigned int  registers[8];
+int data1,clk1,latch1;
 
  /****************************************************************
  * Constants
  ****************************************************************/
 
-#define SYSFS_GPIO_DIR "/sys/class/gpio"
+#define SYSFS_GPIO_DIR "/home/kshitiz/git_gsoc/1.shift/Pocket_beagle"
 #define POLL_TIMEOUT (3 * 100) /* 3 seconds */
 #define MAX_BUF 64
 
@@ -30,7 +29,8 @@
 int gpio_export(unsigned int gpio)
 {
 	int fd, len;
-	char buf[MAX_BUF];
+
+	char *buf =(char *)malloc(sizeof(char) * MAX_BUF);
 
 	fd = open(SYSFS_GPIO_DIR "/export", O_WRONLY);
 	if (fd < 0) {
@@ -38,10 +38,11 @@ int gpio_export(unsigned int gpio)
 		return fd;
 	}
 
-	len = snprintf(buf, sizeof(buf), "%d", gpio);
-	write(fd, buf, len);
+	len = snprintf(buf, sizeof(buf)*MAX_BUF, "%d", gpio);
+	write(fd, (void*)buf, len);
 	close(fd);
 
+	free(buf);
 	return 0;
 }
 
@@ -49,18 +50,20 @@ int gpio_export(unsigned int gpio)
  * gpio_unexport
  ****************************************************************/
 int gpio_unexport(unsigned int gpio)
-{
+ {
 	int fd, len;
-	char buf[MAX_BUF];
+	char *buf = (char *)malloc(sizeof(char) * MAX_BUF);
 
 	fd = open(SYSFS_GPIO_DIR "/unexport", O_WRONLY);
 	if (fd < 0) {
-		perror("gpio/export");
+		perror("gpio/unexport");
 		return fd;
 	}
 
-	len = snprintf(buf, sizeof(buf), "%d", gpio);
+	len = snprintf(buf, sizeof(buf)*MAX_BUF, "%d", gpio);
 	write(fd, buf, len);
+
+	free(buf);
 	close(fd);
 	return 0;
 }
@@ -71,10 +74,9 @@ int gpio_unexport(unsigned int gpio)
 int gpio_set_dir(unsigned int gpio, unsigned int out_flag)
 {
 	int fd, len;
-	char buf[MAX_BUF];
-
-	len = snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR  "/gpio%d/direction", gpio);
-
+//	char buf[MAX_BUF];
+	char *buf =(char *)malloc(sizeof(char) * MAX_BUF);
+	len = snprintf(buf, sizeof(buf)*MAX_BUF, SYSFS_GPIO_DIR  "/gpio%d/direction", gpio);
 	fd = open(buf, O_WRONLY);
 	if (fd < 0) {
 		perror("gpio/direction");
@@ -82,14 +84,13 @@ int gpio_set_dir(unsigned int gpio, unsigned int out_flag)
 	}
 
 	if (out_flag){
-
-
 		write(fd, "out", 4);
 	    printf("out written");
 	}
 	else
 		write(fd, "in", 3);
 
+	free(buf);
 	close(fd);
 	return 0;
 }
@@ -100,9 +101,9 @@ int gpio_set_dir(unsigned int gpio, unsigned int out_flag)
 int gpio_set_value(unsigned int gpio, unsigned int value)
 {
 	int fd, len;
-	char buf[MAX_BUF];
+	char *buf =(char *)malloc(sizeof(char) * MAX_BUF);
 
-	len = snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/value", gpio);
+	len = snprintf(buf, sizeof(buf)*MAX_BUF, SYSFS_GPIO_DIR "/gpio%d/value", gpio);
 
 	fd = open(buf, O_WRONLY);
 	if (fd < 0) {
@@ -115,6 +116,7 @@ int gpio_set_value(unsigned int gpio, unsigned int value)
 	else
 		write(fd, "0", 2);
 
+	free(buf);
 	close(fd);
 	return 0;
 }
@@ -125,10 +127,10 @@ int gpio_set_value(unsigned int gpio, unsigned int value)
 int gpio_get_value(unsigned int gpio, unsigned int *value)
 {
 	int fd, len;
-	char buf[MAX_BUF];
+	char *buf =(char *)malloc(sizeof(char) * MAX_BUF);
 	char ch;
 
-	len = snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/value", gpio);
+	len = snprintf(buf, sizeof(buf)*MAX_BUF, SYSFS_GPIO_DIR "/gpio%d/value", gpio);
 
 	fd = open(buf, O_RDONLY);
 	if (fd < 0) {
@@ -144,6 +146,7 @@ int gpio_get_value(unsigned int gpio, unsigned int *value)
 		*value = 0;
 	}
 
+	free(buf);
 	close(fd);
 	return 0;
 }
@@ -156,9 +159,9 @@ int gpio_get_value(unsigned int gpio, unsigned int *value)
 int gpio_set_edge(unsigned int gpio, char *edge)
 {
 	int fd, len;
-	char buf[MAX_BUF];
+	char *buf =(char *)malloc(sizeof(char) * MAX_BUF);
 
-	len = snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/edge", gpio);
+	len = snprintf(buf, sizeof(buf)*MAX_BUF, SYSFS_GPIO_DIR "/gpio%d/edge", gpio);
 
 	fd = open(buf, O_WRONLY);
 	if (fd < 0) {
@@ -167,6 +170,8 @@ int gpio_set_edge(unsigned int gpio, char *edge)
 	}
 
 	write(fd, edge, strlen(edge) + 1);
+	
+	free(buf);
 	close(fd);
 	return 0;
 }
@@ -178,9 +183,9 @@ int gpio_set_edge(unsigned int gpio, char *edge)
 int gpio_fd_open(unsigned int gpio)
 {
 	int fd, len;
-	char buf[MAX_BUF];
+	char *buf =(char *)malloc(sizeof(char) * MAX_BUF);
 
-	len = snprintf(buf, sizeof(buf), SYSFS_GPIO_DIR "/gpio%d/value", gpio);
+	len = snprintf(buf, sizeof(buf)*MAX_BUF, SYSFS_GPIO_DIR "/gpio%d/value", gpio);
 
 	fd = open(buf, O_RDONLY | O_NONBLOCK );
 	if (fd < 0) {
@@ -267,7 +272,9 @@ int main(int argc, char **argv, char **envp)
 	gpio_set_dir(data, 1);
 	gpio_set_dir(clk, 1);
 	gpio_set_dir(latch, 1);
-	   perror("pass1");
+	  
+	perror("pass1");
+	
 	while (1) {
 		for (int i = 0;i<8;i++)
 		{
