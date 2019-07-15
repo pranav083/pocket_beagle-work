@@ -44,7 +44,7 @@ start:
   	MOV r0, NUMBER_OF_BITS
 
 	// STORE THE BIT DATA IN THE  REGISTER
-	MOV r6.b0, 0b00001111 // MOVE 0 INITIAL VALUE TO R6 
+	MOV r6.b0, 0b11110000 // MOVE 0 INITIAL VALUE TO R6 
 	MOV r6.b1, 0b00000000 // MOVE 0 INITIAL VALUE TO R6 
   	MOV r6.b2, 0b00000000 // MOVE 0 INITIAL VALUE TO R6 
   	MOV r6.b3, 0b00000000 // MOVE 0 INITIAL VALUE TO R6 
@@ -56,46 +56,34 @@ start:
 	CLR r2, r2, 6     //DS0
 	SBBO r2, r3, 0, 4
 	
-	//set INPUT pin to INPUT
-	MOV r3, GPIO1 | GPIO_OE
-	LBBO r2, r3, 0, 4
-	SET r2, r2, 7    //INPUT 
-	SBBO r2, r3, 0, 4
-		
 	//set S0 pin to ouput
 	MOV r3, GPIO1 | GPIO_OE
 	LBBO r2, r3, 0, 4
-	CLR r2, r2, 2    //S0 
+	CLR r2, r2, 13    //S0 
 	SBBO r2, r3, 0, 4
 
 	//set S1 pin to ouput
-	MOV r3, GPIO0 | GPIO_OE
+	MOV r3, GPIO1 | GPIO_OE
 	LBBO r2, r3, 0, 4
-	CLR r2, r2, 3    //S1
+	CLR r2, r2, 12    //S1
 	SBBO r2, r3, 0, 4
 	
-	//set OE1 pin to ouput
+	//set OE1 and OE2 pin to ouput
 	MOV r3, GPIO1 | GPIO_OE
 	LBBO r2, r3, 0, 4
-	CLR r2, r2, 13    //OE1 
-	SBBO r2, r3, 0, 4
-			
-	//set OE2 pin to ouput
-	MOV r3, GPIO1 | GPIO_OE
-	LBBO r2, r3, 0, 4
-	CLR r2, r2, 12    //OE2
-	SBBO r2, r3, 0, 4	  		
+	CLR r2, r2, 2    //OE1 
+	SBBO r2, r3, 0, 4 		
 	
 	//set CP pin to ouput
-	MOV r3, GPIO0 | GPIO_OE
+	MOV r3, GPIO1 | GPIO_OE
 	LBBO r2, r3, 0, 4
-	CLR r2, r2, 15     //CP
+	CLR r2, r2, 14     //CP
 	SBBO r2, r3, 0, 4
 	
 	//set DS7 pin to ouput
 	MOV r3, GPIO1 | GPIO_OE
 	LBBO r2, r3, 0, 4
-	CLR r2, r2, 14     //DS7
+	CLR r2, r2, 15     //DS7
 	SBBO r2, r3, 0, 4
 			
 	//set CHECK LED pin to ouput here
@@ -112,25 +100,24 @@ start:
 	// LOAD THE INPUT SHIFT REGISTER 
 	
 	//Setting the value   the out pin S0
-	MOV  r2, 1 << 2     //move out pin to  
-	SBBO r2, r5, 0, 4   // the p8_5 pin is HIGH	
+	MOV  r2, 1 << 13     //move out pin to  
+	SBBO r2, r5, 0, 4    // the p8_11 pin is HIGH	
 	
 	//Setting the value the out pin S1
-	MOV  r2, 1 << 3     //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_6 pin is LOW	
+	MOV  r2, 1 << 12     //move out pin to  
+	SBBO r2, r4, 0, 4    // the p8_12 pin is LOW	
 
-	//Setting the value the out pin OE1
-	MOV  r2, 1 << 13     //move out pin to  
-	SBBO r2, r5, 0, 4   // the p8_11 pin is HIGH	
+	//Setting the value the out pin OE1 and OE2
+	MOV  r2, 1 << 2     //move out pin to  
+	SBBO r2, r5, 0, 4    // the p8_11 pin is HIGH	
 	
 	//Setting the value the out pin OE2
-	MOV  r2, 1 << 12     //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_12 pin is LOW	
+//	MOV  r2, 1 << 3     //move out pin to  
+//	SBBO r2, r4, 0, 4    // the p8_12 pin is LOW	
 		
-////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 	//NOW THE DATA OUT MODE TO THE LED CONNECTED FIRST REGISTER	
 	
-
 	// THE MODE OF 74HC299 FROM LOAD TO SHIFT RIGHT MODE		
 			
 	//Setting the value   the out pin CHECK LED
@@ -140,9 +127,10 @@ start:
 	// SETTING UP THE DELAY
 	MOV r1,  100000                    // set up for  the delay				
 
-        // perform a LOOP for delay
-L2:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE L2, r1, 0                      // is R1 == 0? if no, then goto L1
+    // perform a LOOP for delay
+L2: 
+	SUB r1, r1, 1                       // subtract 1 from R1
+    QBNE L2, r1, 0                      // is R1 == 0? if no, then goto L1
         
 	//Setting the value   the out pin CHECK LED
 	MOV  r2, 1 << 31    //move out pin to  
@@ -155,28 +143,25 @@ L_OUT2:
 	MOV  r2, 1 << 6    //move out pin to  
 	SBBO r2, r4, 0, 4   // the p8_3 pin is LOW
 
-
 	// SETTING UP THE DELAY
 	MOV r1, OFF_DURATION                    // set up for  the delay				
 
-        // perform a LOOP for delay
-L3:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE L3, r1, 0                      // is R1 == 0? if no, then goto L1
+    // perform a LOOP for delay
+L3: 
+	SUB r1, r1, 1                       // subtract 1 from R1
+    QBNE L3, r1, 0                      // is R1 == 0? if no, then goto L1
         
 	//Setting the value   the out pin CHECK LED
 	MOV  r2, 1 << 31    //move out pin to  
 	SBBO r2, r4, 0, 4   // the p8_20 pin is LOW
 					
-
-
-
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    //move out pin to  
 	SBBO r2, r4, 0, 4   // the p8_16 pin is LOW	
 				
 	//CHECK FOR THE SET BIT AND CLEAR BIT ON THE PIN
-        QBBS DATA_SET, r6.t0                  // if the bit is high, jump to BIT_HIGH
-        QBBC DATA_CLR, r6.t0         	 	 // if the bit is low,  jump to BIT_LOW		 					
+    QBBS DATA_SET, r6.t0                 // if the bit is high, jump to BIT_HIGH
+    QBBC DATA_CLR, r6.t0             	 // if the bit is low,  jump to BIT_LOW		 					
 		
 DATA_SET:
 		
@@ -187,9 +172,10 @@ DATA_SET:
 	// SETTING UP THE DELAY
 	MOV r1, ON_DURATION                    // set up for  the delay				
 
-        // perform a LOOP for delay
-L4:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE L4, r1, 0                      // is R1 == 0? if no, then goto L1
+    // perform a LOOP for delay
+L4: 
+	SUB r1, r1, 1                       // subtract 1 from R1
+    QBNE L4, r1, 0                      // is R1 == 0? if no, then goto L1
         
 	//Setting the value   the out pin CHECK LED
 	MOV  r2, 1 << 31    //move out pin to  
@@ -202,11 +188,10 @@ L4:     SUB r1, r1, 1                       // subtract 1 from R1
 				
 	//shift the bit store in the r6 to the RIGHT
 	LSR  r6, r6, 1		
-					
 
 	// decrement the value of bits to be store and check its value		
 	SUB  r0, r0, 1
-    QBEQ OUT, r0, 0 
+    QBEQ OUT_E, r0, 0 
     QBNE L_OUT2, r0, 0 
 
 DATA_CLR:
@@ -217,116 +202,96 @@ DATA_CLR:
 
 	// SETTING UP THE DELAY
 	MOV r1, OFF_DURATION                    // set up for  the delay				
-        // perform a LOOP for delay
+    // perform a LOOP for delay
 
-L5:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE L5, r1, 0                      // is R1 == 0? if no, then goto L1
+L5:
+	SUB r1, r1, 1                       // subtract 1 from R1
+    QBNE L5, r1, 0                      // is R1 == 0? if no, then goto L1
         
 	//Setting the value   the out pin CHECK LED
 	MOV  r2, 1 << 31    //move out pin to  
 	SBBO r2, r4, 0, 4   // the p8_20 pin is LOW
-		
-							
+						
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    //move out pin to  
 	SBBO r2, r5, 0, 4   // the p8_16 pin is HIGH	
 				
 	//shift the bit store in the r6 to the RIGHT
-	LSR  r6, r6, 1		
-				
+	LSR  r6, r6, 1				
 
 	// decrement the value of bits to be store and check its value		
 	SUB  r0, r0, 1
-        QBEQ OUT, r0, 0 
-        QBNE L_OUT2, r0, 0 
+    QBEQ OUT_E, r0, 0 
+    QBNE L_OUT2, r0, 0 
 
-//-------------------------------------------------------------------------------------------------				
-// THIS IS THE HALT OF THE PROGRAM WITH SUSSESSFUL INDICATION SHOWS  BLINKING OF LIGHT AT P8_20 PIN
-
-OUT:
-
-
-	// SETTING UP THE DELAY
-	MOV r1, 100000                    // set up for a .9 second delay				
-
-        // perform a LOOP for delay
-LL3:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE LL3, r1, 0                      // is R1 == 0? if no, then goto L1
-
-	//Setting the value the out pin CHECK LED
-	MOV  r2, 1 << 14    //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_16 pin is LOW
-		
-
-	//Setting the value the out pin OE1
-	MOV  r2, 1 << 13     //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_11 pin is LOW	
-	
-	//Setting the value the out pin OE2
-	MOV  r2, 1 << 12     //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_12 pin is LOW	
-			
-	
-						
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_16 pin is LOW	
+//---------------------------------------------------------------------------
+// CHANGING THE STATE OF THE ENABLE PIN
+ 
+OUT_E:
 
 	//Setting the value the out pin DS0
 	MOV  r2, 1 << 6    //move out pin to  
 	SBBO r2, r4, 0, 4   // the p8_3 pin is LOW	
-	
-
 
 	// SETTING UP THE DELAY
 	MOV r1, 100000                    // set up for a .9 second delay				
 
-        // perform a LOOP for delay
-LL4:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE LL4, r1, 0                      // is R1 == 0? if no, then goto L1
-					
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_16 pin is HIGH	
-
-
-	// SETTING UP THE DELAY
-	MOV r1, 100000                    // set up for a .9 second delay				
-
-        // perform a LOOP for delay
-LL5:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE LL5, r1, 0                      // is R1 == 0? if no, then goto L1
-	
+    // perform a LOOP for delay
+LL3:     
+	SUB r1, r1, 1                       // subtract 1 from R1
+    QBNE LL3, r1, 0                      // is R1 == 0? if no, then goto L1					
 						
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    //move out pin to  
 	SBBO r2, r4, 0, 4   // the p8_16 pin is LOW	
+	
+
+	//Setting the value the out pin OE1 and OE2
+	MOV  r2, 1 << 2     //move out pin to  
+	SBBO r2, r4, 0, 4   // the p8_11 pin is LOW		
+	
+	// SETTING UP THE DELAY
+	MOV r1, 100000                    // set up for a .9 second delay				
+
+    // perform a LOOP for delay
+LL4:     
+	SUB r1, r1, 1                       // subtract 1 from R1
+    QBNE LL4, r1, 0                      // is R1 == 0? if no, then goto L1					
+
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    //move out pin to  
+	SBBO r2, r5, 0, 4   // the p8_16 pin is HIGH	
+
+	
+	// SETTING UP THE DELAY
+	MOV r1, 100000                    // set up for a .9 second delay				
+
+    // perform a LOOP for delay
+LL5:     
+	SUB r1, r1, 1                        // subtract 1 from R1
+    QBNE LL5, r1, 0                      // is R1 == 0? if no, then goto L1					
+
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    //move out pin to  
+	SBBO r2, r4, 0, 4   // the p8_16 pin is LOW				
+	
+	
+	
+
+//-------------------------------------------------------------------------------------------------				
+// THIS IS THE HALT OF THE PROGRAM WITH SUSSESSFUL INDICATION SHOWS  BLINKING OF LIGHT AT P8_20 PIN
+
 
 
 	// SETTING UP THE DELAY
 	MOV r1, 100000                    // set up for a .9 second delay				
 
-        // perform a LOOP for delay
-LL6:     SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE LL6, r1, 0                      // is R1 == 0? if no, then goto L1
-	
-			
-
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_16 pin is HIGH	
-
-	// SETTING UP THE DELAY
-	MOV r1, 100000                    // set up for a .9 second delay				
-
-        // perform a LOOP for delay
-LL7:    SUB r1, r1, 1                       // subtract 1 from R1
-        QBNE LL7, r1, 0                      // is R1 == 0? if no, then goto L		
-	
-			
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    //move out pin to  
-	SBBO r2, r4, 0, 4   // the p8_16 pin is LOW	
+    // perform a LOOP for delay
+LL6:     
+	SUB r1, r1, 1                       // subtract 1 from R1
+    QBNE LL6, r1, 0                      // is R1 == 0? if no, then goto L1	
 
 	//Setting the value   the out pin CHECK LED
 	MOV  r2, 1 << 31    //move out pin to  
