@@ -1,0 +1,3 @@
+## these file are ignored by the git when doing the upload
+
+*.bin
