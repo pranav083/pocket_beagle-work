@@ -23,9 +23,9 @@
 #define CPRUCFG  c4
 
 start:
-    lbco r0, CPRUCFG, 4, 4   // read SYSCFG
-    clr  r0.t4               // clear SYSCFG[STANDBY_INIT]
-    sbco r0, CPRUCFG, 4, 4   // enable OCP master port;
+	lbco r0, CPRUCFG, 4, 4   // read SYSCFG
+	clr  r0.t4               // clear SYSCFG[STANDBY_INIT]
+	sbco r0, CPRUCFG, 4, 4   // enable OCP master port;
 
 	//set SRCLR pin to ouput
 	MOV r3, GPIO1 | GPIO_OE
@@ -79,50 +79,34 @@ start:
 	MOV r5, 1 << RCLK   // data latch output pin
 	MOV r6, 1 << SER    // data input pin
 
-	MOV r0, ON_DURATION
+	MOV r0, ON_DURATION  //the amount of time delay is given
 
 
 DELAY_0:
 	SUB r0, r0, 1
 	QBNE DELAY_0, r0, 0
 	MOV r0, ON_DURATION
- 
-// LATCH_IN:
-	SBBO r5, r3, 0, 4 	// keep latch pin down(RCLK) 
 
-//DELAY_1:
-	//SUB r0, r0, 10
-	//QBNE DELAY_1, r0, 0
-	//MOV r0, ON_DURATION
- 
-// CLK_D:
-	SBBO r2, r4, 0, 4 	//keep clk pin low for data in (SRCLK)
+	SBBO r5, r3, 0, 4 	// keep latch pin down(RCLK)
+ 	SBBO r2, r4, 0, 4 	//keep clk pin low for data in (SRCLK)
 
 DELAY_2:
 	SUB r0, r0, 4
 	QBNE DELAY_2, r0, 0
 	MOV r0, ON_DURATION
-	
-// DATA_1:		
 	SBBO r6, r3, 0, 4   //keep data pin high for data in (SER)
 
 DELAY_3:
 	SUB r0, r0, 4
 	QBNE DELAY_3, r0, 0
 	MOV r0, ON_DURATION
- 
-// CLK_D:
 	SBBO r2, r3, 0, 4 	//keep clk pin high for data in (SRCLK)
 
 DELAY_4:
 	SUB r0, r0, 4
 	QBNE DELAY_4, r0, 0
 	MOV r0, ON_DURATION	
-
-// LATCH_IN:
 	SBBO r5, r4, 0, 4 	// keep latch pin up(RCLK)
-	
-// DATA_1:		
 	SBBO r6, r4, 0, 4   //keep data pin high for data in (SER)		
 	
 QBA DELAY_0
