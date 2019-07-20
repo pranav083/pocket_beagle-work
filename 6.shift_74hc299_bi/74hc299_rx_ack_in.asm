@@ -91,23 +91,18 @@ start:
 	//	DATA			6			-
 	//	DATA			7			-
 
-//----------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------
+//WAITING FOR ACK. (BIT 1) TO GET FROM THE RECEIVER SIDE FOR SUCCESSFUL TRANSMISSION AND MASTER IN PARALLEL LOAD MODE
 
 
-// THESE ARE COMMON FOR BOTH rx AND tx
 	MOV r6.b0, 0b00000101 		// CONTROL BITS WHICH MAKES IT MASTER FOR COMMUNICATION
 	MOV r6.b1, 0b00001011 		// CONTROL BITS WHICH MAKES IT SLAVE  FOR COMMUNICATION
   	MOV r6.b2, 0b00000010 		// SENDING THE DATA BIT TO FOR SUCCESFUL ACK OF DATA
-  	MOV r6.b3, 0b00000001 		// SENDING TO SHIFT THE SYSTEM TO CONTROL MODE
+  	MOV r6.b3, 0b00000000 		// MOVE 0 INITIAL VALUE TO R6
 
-
-//example data of the register that will be transfer via shift register
     MOV R9  	, 0X0				//MOV O TO THE REGISTER
-    MOV R10.b0 	, 0X7				//MOV 7 TO THE REGISTER ,AS THE DATA NEED TO SENT 6 TIMES AND ACK NEED TO RECEIVE 7 TIMES
-	MOV R11.b0 	, 0b00000000		//MOV O TO THE REGISTER
-	MOV R12 	, 0X0F0F0F0F		//MOV THE DATA THAT NEED TO BE SENT
+    MOV R10.b0 	, 0X5				//MOV 5 TO THE REGISTER ,IT IS THE NO. OF TIMES A LOOP FOR DATA STORAGE WILL RUN
 
+	MOV R11 	, 0x0				//MOV O TO THE REGISTER
 
 	//set DS0 pin to ouput
 	MOV r3, GPIO1 | GPIO_OE
@@ -139,7 +134,7 @@ start:
 	CLR r2, r2, 14     		//CP
 	SBBO r2, r3, 0, 4
 
-	//set COMMON for Q0 and Q7 pin to INPUT
+	//set COMMON for Q0 and Q7 pin to ouput
 	MOV r3, GPIO1 | GPIO_OE
 	LBBO r2, r3, 0, 4
 	SET r2, r2, 7     		//INPUT
@@ -162,180 +157,15 @@ start:
 	MOV r4, GPIO1 | GPIO_CLEARDATAOUT
 	MOV r5, GPIO1 | GPIO_SETDATAOUT
 
+
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
-		//LOAD THE CONTROL BITS IN SHIFT REGISTER
-TX_CLOAD:
-	// LOAD THE INPUT SHIFT REGISTER IN SHIFT RIGHT MODE
+	//RESETING THE SHIFT REGISTER FOR PARALLEL LOAD
 
-	//Setting the value the out pin S0
-	MOV  r2, 1 << 13     		//move out pin to
-	SBBO r2, r5, 0, 4    		// the p8_11 pin is HIGH
-
-	//Setting the value the out pin S1
-	MOV  r2, 1 << 12     		//move out pin to
-	SBBO r2, r4, 0, 4    		// the p8_12 pin is LOW
-
-	//Setting the value the out pin OE1 and OE2
-	MOV  r2, 1 << 2     		//move out pin to
-	SBBO r2, r5, 0, 4    		// the p8_5 pin is HIGH
-
+RX_MR:
 	//Setting the value the out pin MR
 	MOV  r2, 1 << 15     		//move out pin to
-	SBBO r2, r5, 0, 4    		// the p8_15 pin is HIGH
-
-	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    			//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
-
-	//Setting the value   the out pin CHECK LED
-	MOV  r2, 1 << 31    			//move out pin to
-	SBBO r2, r5, 0, 4   			// the p8_20 pin is HIGH
-//***************************************************************************************
-	//NOW THE DATA OUT MODE TO THE CONNECTED SHIFT REGISTER FORN BEING USED AS TX
-
-	// THE MODE OF 74HC299 FROM LOAD TO SHIFT RIGHT MODE
-
-	// SETTING UP THE DELAY
-	MOV r1,OFF_DURATION             // set up for  the delay
-
-    	// perform a LOOP for delay
-LTCM2:
-	SUB r1, r1, 1               // subtract 1 from R1
-	QBNE LTCM2, r1, 0             // is R1 == 0? if no, then goto L1
-
-TX_OUT2:
-	// NOW THE DATA STORE IN THE REGISTER IS MADE TO THE DATA PIN OF THE SHIFT REGISTER R6
-
-
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    		//move out pin to
-	SBBO r2, r5, 0, 4   		// the p8_16 pin is HIGH
-
-	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    			//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
-
-	// SETTING UP THE DELAY
-	MOV r1, OFF_DURATION        // set up for  the delay
-
-    // perform a LOOP for delay
-LTCM3:
-	SUB r1, r1, 1               // subtract 1 from R1
-   	QBNE LTCM3, r1, 0             // is R1 == 0? if no, then goto L1
-
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    		//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_16 pin is LOW
-
-
-//***************************************************************************************
-//JUMP_MAS:
-	//CHECK FOR THE CONTROL BIT WRITTING TO THE MASTER SHIFT REGISTER
-   	QBBS TX_CSET, r6.t7    	// if the bit is high, jump to BIT_HIGH
-   	QBBC TX_CCLR, r6.t7        // if the bit is low,  jump to BIT_LOW
-
-//JUMP_SLV:
-	//CHECK FOR THE CONTROL BIT WRITTING TO THE SLAVE SHIFT REGISTER
-   //	QBBS DATA_SET, r6.t15    	// if the bit is high, jump to BIT_HIGH
-   //	QBBC DATA_CLR, r6.t15        // if the bit is low,  jump to BIT_LOW
-//***************************************************************************************
-
-TX_CSET:
-
-	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    			//move out pin to
-	SBBO r2, r5, 0, 4   		// the p8_3 pin is HIGH
-
-	// SETTING UP THE DELAY
-	MOV r1, OFF_DURATION         // set up for  the delay
-
-    	// perform a LOOP for delay
-LTCM4:
-	SUB r1, r1, 1               // subtract 1 from R1
-    QBNE LTCM4, r1, 0             // is R1 == 0? if no, then goto L1
-
-	//shift the bit store in the r6 to the RIGHT
-	LSL  r6, r6, 1
-
-	// decrement the value of bits to be store and check its value
-	SUB  r0, r0, 1
-    QBEQ TX_OUT_E, r0, 0
-    QBNE TX_OUT2, r0, 0
-
-TX_CCLR:
-
-	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    		//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
-
-	// SETTING UP THE DELAY
-	MOV r1, OFF_DURATION            // set up for  the delay
-    	// perform a LOOP for delay
-
-LTCM5:
-	SUB r1, r1, 1                   // subtract 1 from R1
-	QBNE LTCM5, r1, 0                  // is R1 == 0? if no, then goto L1
-
-	//shift the bit store in the r6 to the RIGHT
-	LSL  r6, r6, 1
-
-	// decrement the value of bits to be store and check its value
-	SUB  r0, r0, 1
-	QBEQ TX_OUT_E, r0, 0
-    QBNE TX_OUT2, r0, 0
-
-//***************************************************************************************
-// CHANGING THE STATE OF THE ENABLE PIN
-
-TX_OUT_E:
-	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    			//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
-
-	//Setting the value the out pin OE1 and OE2
-	MOV  r2, 1 << 2     		//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_5 pin is LOW
-
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    		//move out pin to
-	SBBO r2, r5, 0, 4   		// the p8_16 pin is HIGH
-
-	// SETTING UP THE DELAY
-	MOV r1, OFF_DURATION        // set up for a .9 second delay
-
-    // perform a LOOP for delay
-LTCE1:
-	SUB r1, r1, 1                // subtract 1 from R1
-
-	// SETTING UP THE DELAY
-	MOV r8, 10                      		//RUN THE LOOP 4 TIMES
-LTCE2:
-	SUB r8, r8, 1                       	// subtract 1 from R1
-    QBNE LTCE2, r8, 0                      	// is R8 == 0? if no, then goto L1
-    QBNE LTCE1, r1, 0              // is R1 == 0? if no, then goto L1
-
-
-	//Setting the value the out pin CP
-	MOV  r2, 1 << 14    		//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_16 pin is LOW
-
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-	//Setting the value   the out pin CHECK LED
-	MOV  r2, 1 << 31    			//move out pin to
-	SBBO r2, r4, 0, 4   			// the p8_20 pin is LOW
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-
-
-//---------------------------------------------------------------------------------------
-//***************************************************************************************
-	//RESETING THE SHIFT REGISTER FOR PARALLEL LOAD MODE
-TX_MR:
-	//Setting the value the out pin MR
-	MOV  r2, 1 << 15     		//move out pin to
-	SBBO r2, r4, 0, 4    		// the p8_20 pin is LOW
+	SBBO r2, r4, 0, 4    		// the p8_15 pin is LOW
 
 	// SETTING UP THE DELAY
 	MOV r1, OFF_DURATION            // set up for  the delay
@@ -348,13 +178,19 @@ LMR1:
 
 	//Setting the value the out pin MR
 	MOV  r2, 1 << 15     		//move out pin to
-	SBBO r2, r5, 0, 4    		// the p8_20 pin is HIGH
+	SBBO r2, r5, 0, 4    		// the p8_15 pin is HIGH
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+
+
+
 
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 			// SETTING THE REGISTER TO PARALLEL LOAD MODE
-
-TX_PLOAD:
+			//
+RX_LOAD:
 	//Setting the value the out pin S0
 	MOV  r2, 1 << 13 			//move out pin to
 	SBBO r2, r5, 0, 4   			// the p8_11 pin is HIGH
@@ -365,7 +201,7 @@ TX_PLOAD:
 
 	//Setting the value the out pin OE1 and OE2
 	MOV  r2, 1 << 2     		//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_5 pin is LOW
+	SBBO r2, r4, 0, 4   		// the P8_5 pin is LOW
 
 
 	//Setting the value the out pin DS0
@@ -381,9 +217,9 @@ TX_PLOAD:
 	MOV r1, OFF_DURATION            // set up for  the delay
     	// perform a LOOP for delay
 
-LTP1:
+LRL1:
 	SUB r1, r1, 1                    // subtract 1 from R1
-	QBNE LTP1, r1, 0                  // is R1 == 0? if no, then goto L1
+	QBNE LRL1, r1, 0                  // is R1 == 0? if no, then goto L1
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    			//move out pin to
@@ -393,35 +229,33 @@ LTP1:
 //    CLKING IN THE DATA GIVEN BY RECEIVER SHIFT REGISTER
 
 	// SETTING UP THE DELAY
-	MOV r1, ON_DURATION        // set up for a .9 second delay
+	MOV r1, ON_DURATION        // set up for  delay
 
     // perform a LOOP for delay
-LTP2:
+LRL2:
 	SUB r1, r1, 1                // subtract 1 from R1
 
 	// SETTING UP THE DELAY
 	MOV r8, 4                      		//RUN THE LOOP 4 TIMES
 
         // perform a LOOP for delay
-LTP3:
+LRL3:
 	SUB r8, r8, 1                       	// subtract 1 from R1
-    QBNE LTP3, r8, 0                      	// is R8 == 0? if no, then goto L1
+    QBNE LRL3, r8, 0                      	// is R8 == 0? if no, then goto L1
 
-    QBNE LTL2, r1, 0              // is R1 == 0? if no, then goto L1
-
+    QBNE LRL2, r1, 0              // is R1 == 0? if no, then goto L1
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    			//move out pin to
 	SBBO r2, r5, 0, 4   			// the p8_16 pin is HIGH
 
-
 	// SETTING UP THE DELAY
 	MOV r1, OFF_DURATION            // set up for  the delay
     	// perform a LOOP for delay
 
-LTP4:
+LRL4:
 	SUB r1, r1, 1                    // subtract 1 from R1
-	QBNE LTP4, r1, 0                  // is R1 == 0? if no, then goto L1
+	QBNE LRL4, r1, 0                  // is R1 == 0? if no, then goto L1
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    			//move out pin to
@@ -431,14 +265,22 @@ LTP4:
 	MOV r1, OFF_DURATION            // set up for  the delay
     	// perform a LOOP for delay
 
-LTP5:
+LRL5:
 	SUB r1, r1, 1                    // subtract 1 from R1
-	QBNE LTP5, r1, 0                  // is R1 == 0? if no, then goto L1
+	QBNE LRL5, r1, 0                  // is R1 == 0? if no, then goto L1
+
+
 
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
-			// SETTING THE REGISTER TO SHIFT RIGHT MODE TO LOAD THE ACK DATA
-TX_ASTORE1:
+
+
+
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+			// SETTING THE REGISTER TO SHIFT RIGHT MODE TO LOAD THE CONTROL REGISTER DATA
+RX_STORE:
 
 	//Setting the value   the out pin S0
 	MOV  r2, 1 << 13  			//move out pin to
@@ -450,7 +292,7 @@ TX_ASTORE1:
 
 	//Setting the value the out pin OE1 and OE2
 	MOV  r2, 1 << 2     		//move out pin to
-	SBBO r2, r4, 0, 4    		// the p8_5 pin is LOW
+	SBBO r2, r5, 0, 4    		// the P8_5 pin is HIGH
 
 
 	//Setting the value the out pin DS0
@@ -467,9 +309,9 @@ TX_ASTORE1:
 	MOV r1,OFF_DURATION 			// set up for a delay
 
     // perform a half second delay
-LTAS1:
+LRS1:
      SUB r1, r1, 1				// subtract 1 from R1
-     QBNE LTAS1, r1, 0				// is R1 == 0? if no, then goto L1
+     QBNE LRS1, r1, 0				// is R1 == 0? if no, then goto L1
 
 
 	//Setting the value the out pin CP
@@ -484,11 +326,11 @@ LTAS1:
 	MOV r1,OFF_DURATION 			// set up for a delay
 
         // perform a half second delay
-LTAS2:
+LRS2:
      SUB r1, r1, 1				// subtract 1 from R1
-     QBNE LTAS2, r1, 0				// is R1 == 0? if no, then goto L1
+     QBNE LRS2, r1, 0				// is R1 == 0? if no, then goto L1
 
-TX_ABIT:
+BIT_D:
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14			//move out pin to
@@ -500,9 +342,9 @@ TX_ABIT:
 
     MOV r1, OFF_DURATION 			// set up of delay
 
-LTAS3:
+LRS3:
 	SUB r1, r1, 1				// subtract 1 from R1
-    QBNE LTAS3, r1, 0				// is R1 == 0? if no, then goto L1
+    QBNE LRS3, r1, 0				// is R1 == 0? if no, then goto L1
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14			//move out pin to
@@ -510,12 +352,12 @@ LTAS3:
 
 
     // TAKE THE ACK BIT INTO THE REGISTER FOR THE CONFORMATION OF HAND SAKING
-	QBBS TX_ABIT_SET, r7.t0			// if the bit is high, jump to LED_HIGH
-	QBBC TX_ABIT_CLR, r7.t0			// if the bit is low,  jump to LED_LOW
+	QBBS BIT_SET, r7.t0			// if the bit is high, jump to LED_HIGH
+	QBBC BIT_CLR, r7.t0			// if the bit is low,  jump to LED_LOW
 
 
 	// STORE 1 VALUE IN THE REGISTER
-TX_ABIT_SET:
+BIT_SET:
 	//PERFORM THE LEFT SHIFT OPERATION ON THE REGISTER R6
 	LSL r9, r9, 1
 
@@ -523,74 +365,54 @@ TX_ABIT_SET:
 
     MOV r1, OFF_DURATION 			// set up of delay
 
-LTAS4:
+LRS4:
  	SUB r1, r1, 1				// subtract 1 from R1
-    QBNE LTAS4, r1, 0				// is R1 == 0? if no, then goto L1
+    QBNE LRS4, r1, 0				// is R1 == 0? if no, then goto L1
 
 
     SUB r0, r0, 1
-    QBEQ TX_ATEST, r0, 0
-    QBNE TX_ABIT, r0, 0
+    QBEQ RX_TEST, r0, 0
+    QBNE BIT_D, r0, 0
+
 	//STORE 0 VALUE IN THE REGISTER
-TX_ABIT_CLR:
+BIT_CLR:
 	//PERFORM THE LEFT SHIFT OPERATION ON THE REGISTER R6
 	LSL r9, r9, 1
 
     MOV r1, OFF_DURATION 			// set up of delay
 
-LTAS5:
+LRS5:
 	SUB r1, r1, 1				// subtract 1 from R1
-    QBNE LTAS5, r1, 0				// is R1 == 0? if no, then goto L1
+    QBNE LRS5, r1, 0				// is R1 == 0? if no, then goto L1
 
     SUB r0, r0, 1
-    QBEQ TX_ATEST, r0, 0
-    QBNE TX_ABIT, r0, 0
+    QBEQ RX_TEST, r0, 0
+    QBNE BIT_D, r0, 0
 
 //---------------------------------------------------------------------------------------
 //THE DATA GET LOADED TO THE REGISTER R9
 //---------------------------------------------------------------------------------------
 
 
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+
+	//TESTING FOR THE HIGH BIT 0 ctrl BIT AT BIT 1 IN REGISTER R9
+
+RX_TEST:
+
+	QBBC RX_MR, r9.t0			// if the bit is low,  jump to RX_MR (MASTER RESET AND AGAIN TEST IT)
+
+
+
+
 
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 
-	//TESTING FOR THE HIGH BIT 1 ACK BIT AT BIT 1 IN REGISTER R9
 
-TX_ATEST:
-
-	QBBC TX_MR, r9.t1			// if the bit is low,  jump to TX_MR (MASTER RESET AND AGAIN TEST IT)
-
-	MOV R10.b1	, 0X6					// THIS LOOP WILL RUN FOR 6 TIME TO STORE ALL SIX BIT OF DATA IN ONE REGISTER OF PRU
-
-    SUB R10.b0, R10.b0, 1	//DECREASE THE VALUE BY ONE AS 6 BIT OF DATA WILL COME OUT FOR ONLY  TIMES
-    QBEQ EXIT, R10.b0, 0
-
-
-//---------------------------------------------------------------------------------------
-//***************************************************************************************
-TX_DATA:
-
-	// GETTING DATA REGISTER BITS REGISTER READY FOR TRANSMISSION
-
-	// THIS LOOP STORE THE 6 BIT OF DATAIN ONE BYTE REGISTER THAT WILL BE TX THROUGH THE SHIFT REGISTER
-TX_WR2:
-	MOV R11.t0, R12.t31  // TAKE DATA FROM MSB TO LSB
-	LSL R11.b0,R11.b0,1  // SHIFT THE DATA BY ONE
-	LSL R12, R12, 1      // SHIFT THE DATA BIT BY ONE
-
-    SUB R10.b1, R10.b1, 1	//
-    QBNE TX_WR1, r0, 0		// LOOP RUN FOR TAKING 6 BIT OF MSB DATA BITS
-
-    MOV R11.t0, 0  			// THE FIRST BIT IS CONTROL BIT
-	LSL R11.b0,R11.b0,1  	// SHIFT THE DATA BY ONE
-	MOV R11.t0, 0  			// THE SECOND  BIT AS ACK BIT AT BIT 1
-
-   	// AS THE ACK IS IS RECEIVED ITS FOR THE DATA TRANSMISSION
-   	//FOR 8 BIT SHIFT REGISTER DATA IS TRANMITTED 6 BIT AT A TIME
-	// OTHER TWO BIT ARE RESERVED FOR ack AND control/data MODE SIGNAL
-
-	// LOAD THE INPUT SHIFT REGISTER IN SHIFT RIGHT MODE
+RX_ACK:
+	// LOAD THE  SHIFT REGISTER IN SHIFT RIGHT MODE
 
 	//Setting the value the out pin S0
 	MOV  r2, 1 << 13     		//move out pin to
@@ -602,7 +424,7 @@ TX_WR2:
 
 	//Setting the value the out pin OE1 and OE2
 	MOV  r2, 1 << 2     		//move out pin to
-	SBBO r2, r5, 0, 4    		// the p8_5 pin is HIGH
+	SBBO r2, r5, 0, 4    		// the P8_5 pin is HIGH
 
 	//Setting the value the out pin MR
 	MOV  r2, 1 << 15     		//move out pin to
@@ -611,26 +433,21 @@ TX_WR2:
 	//Setting the value the out pin DS0
 	MOV  r2, 1 << 6    			//move out pin to
 	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
-
 //***************************************************************************************
-	//NOW THE DATA IS TRANSMIT TO OTHER BEAGLEBONE PRU REGISTER
+	//NOW THE DATA OUT MODE TO THE  SHIFT REGISTER
 
 	// THE MODE OF 74HC299 FROM LOAD TO SHIFT RIGHT MODE
-
-	//LENGTH OF DATA TO BE TRANSFER
-	MOV R0, 32
 
 	// SETTING UP THE DELAY
 	MOV r1,OFF_DURATION             // set up for  the delay
 
     	// perform a LOOP for delay
-LTD1:
+LRAM2:
 	SUB r1, r1, 1               // subtract 1 from R1
-	QBNE LTD1, r1, 0             // is R1 == 0? if no, then goto L1
+	QBNE LRAM2, r1, 0             // is R1 == 0? if no, then goto L1
 
-TX_OUT1:
+L_OUT2:
 	// NOW THE DATA STORE IN THE REGISTER IS MADE TO THE DATA PIN OF THE SHIFT REGISTER R6
-
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    		//move out pin to
@@ -644,9 +461,9 @@ TX_OUT1:
 	MOV r1, OFF_DURATION        // set up for  the delay
 
     // perform a LOOP for delay
-LTD3:
+LRAM3:
 	SUB r1, r1, 1               // subtract 1 from R1
-   	QBNE LTD3, r1, 0             // is R1 == 0? if no, then goto L1
+   	QBNE LRAM3, r1, 0             // is R1 == 0? if no, then goto L1
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    		//move out pin to
@@ -654,14 +471,20 @@ LTD3:
 
 
 //***************************************************************************************
-JUMP_DATA:
+JUMP_SLV:
+	//CHECK FOR THE CONTROL BIT WRITTING TO THE SLAVE SHIFT REGISTER
+   	QBBS DATA_SET, r6.t15    	// if the bit is high, jump to BIT_HIGH
+   	QBBC DATA_CLR, r6.t15        // if the bit is low,  jump to BIT_LOW
+  // THIS IS THE RX CODE
+//JUMP_MAS:
 	//CHECK FOR THE CONTROL BIT WRITTING TO THE MASTER SHIFT REGISTER
-   	QBBS TX_D_SET, r11.t0    	// if the bit is high, jump to BIT_HIGH
-   	QBBC TX_D_CLR, r11.t0        // if the bit is low,  jump to BIT_LOW
+ //  	QBBS DATA_SET, r6.t7    	// if the bit is high, jump to BIT_HIGH
+ //  	QBBC DATA_CLR, r6.t7        // if the bit is low,  jump to BIT_LOW
+
 
 //***************************************************************************************
 
-TX_D_SET:
+DATA_SET:
 
 	//Setting the value the out pin DS0
 	MOV  r2, 1 << 6    			//move out pin to
@@ -671,19 +494,19 @@ TX_D_SET:
 	MOV r1, OFF_DURATION         // set up for  the delay
 
     	// perform a LOOP for delay
-LTD4:
+LRAM4:
 	SUB r1, r1, 1               // subtract 1 from R1
-    QBNE LTD4, r1, 0             // is R1 == 0? if no, then goto L1
+    QBNE LRAM4, r1, 0             // is R1 == 0? if no, then goto L1
 
 	//shift the bit store in the r6 to the RIGHT
 	LSL  r6, r6, 1
 
 	// decrement the value of bits to be store and check its value
 	SUB  r0, r0, 1
-    QBEQ EXIT, r0, 0
-    QBNE TX_OUT1, r0, 0
+    QBEQ OUT_E, r0, 0
+    QBNE L_OUT2, r0, 0
 
-TX_D_CLR:
+DATA_CLR:
 
 	//Setting the value the out pin DS0
 	MOV  r2, 1 << 6    		//move out pin to
@@ -693,29 +516,29 @@ TX_D_CLR:
 	MOV r1, OFF_DURATION            // set up for  the delay
     	// perform a LOOP for delay
 
-LTD5:
+LRAM5:
 	SUB r1, r1, 1                   // subtract 1 from R1
-	QBNE LTD5, r1, 0                  // is R1 == 0? if no, then goto L1
+	QBNE LRAM5, r1, 0                  // is R1 == 0? if no, then goto L1
 
 	//shift the bit store in the r6 to the RIGHT
 	LSL  r6, r6, 1
 
 	// decrement the value of bits to be store and check its value
 	SUB  r0, r0, 1
-	QBEQ EXIT, r0, 0
-    QBNE TX_OUT1, r0, 0
+	QBEQ OUT_E, r0, 0
+    QBNE L_OUT2, r0, 0
 
 //***************************************************************************************
 // CHANGING THE STATE OF THE ENABLE PIN
 
-TX_OUT_E1:
+OUT_E:
 	//Setting the value the out pin DS0
 	MOV  r2, 1 << 6    			//move out pin to
 	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
 
 	//Setting the value the out pin OE1 and OE2
 	MOV  r2, 1 << 2     		//move out pin to
-	SBBO r2, r4, 0, 4   		// the p8_5 pin is LOW
+	SBBO r2, r4, 0, 4   		// the P8_5 pin is LOW
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    		//move out pin to
@@ -725,23 +548,466 @@ TX_OUT_E1:
 	MOV r1, OFF_DURATION        // set up for a .9 second delay
 
     // perform a LOOP for delay
-LTDE1:
+LRAE1:
 	SUB r1, r1, 1                // subtract 1 from R1
 
 	// SETTING UP THE DELAY
 	MOV r8, 10                      		//RUN THE LOOP 4 TIMES
-LTDE2:
+LRAE2:
 	SUB r8, r8, 1                       	// subtract 1 from R1
-    QBNE LTDE2, r8, 0                      	// is R8 == 0? if no, then goto L1
-    QBNE LTDE1, r1, 0              // is R1 == 0? if no, then goto L1
+    QBNE LRAE2, r8, 0                      	// is R8 == 0? if no, then goto L1
+    QBNE LRAE1, r1, 0              // is R1 == 0? if no, then goto L1
+
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    		//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_16 pin is LOW
+//***************************************************************************************
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+	//RESETING THE SHIFT REGISTER FOR PARALLEL LOAD FOR STORING THE DATA BITS
+
+RX_MRD1:
+	//Setting the value the out pin MR
+	MOV  r2, 1 << 15     		//move out pin to
+	SBBO r2, r4, 0, 4    		// the p8_15 pin is LOW
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION            // set up for  the delay
+    	// perform a LOOP for delay
+
+LMRD1:
+	SUB r1, r1, 1                   // subtract 1 from R1
+	QBNE LMRD1, r1, 0                  // is R1 == 0? if no, then goto L1
+
+
+	//Setting the value the out pin MR
+	MOV  r2, 1 << 15     		//move out pin to
+	SBBO r2, r5, 0, 4    		// the p8_15 pin is HIGH
+
+
+
+
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+			// SETTING THE REGISTER TO PARALLEL LOAD MODE FOR STORING THE DATA BITS
+			//
+RX_DATA:
+	//Setting the value the out pin S0
+	MOV  r2, 1 << 13 			//move out pin to
+	SBBO r2, r5, 0, 4   			// the p8_11 pin is HIGH
+
+	//Setting the value the out pin S1
+	MOV  r2, 1 << 12  			//move out pin to
+	SBBO r2, r5, 0, 4   			// the p8_12 pin is HIGH
+
+	//Setting the value the out pin OE1 and OE2
+	MOV  r2, 1 << 2     		//move out pin to
+	SBBO r2, r4, 0, 4   		// the P8_5 pin is LOW
+
+
+	//Setting the value the out pin DS0
+	MOV  r2, 1 << 6    			//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
+//***************************************************************************************
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    			//move out pin to
+	SBBO r2, r5, 0, 4   			// the p8_16 pin is HIGH
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION            // set up for  the delay
+    	// perform a LOOP for delay
+
+LRD1:
+	SUB r1, r1, 1                    // subtract 1 from R1
+	QBNE LRD1, r1, 0                  // is R1 == 0? if no, then goto L1
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    			//move out pin to
+	SBBO r2, r4, 0, 4   			// the p8_16 pin is LOW
+
+//***************************************************************************************
+//    CHECKING IN THE DATA GIVEN BY RECEIVER SHIFT REGISTER
+
+	// SETTING UP THE DELAY
+	MOV r1, ON_DURATION        // set up for  delay
+
+    // perform a LOOP for delay
+LRD2:
+	SUB r1, r1, 1                // subtract 1 from R1
+
+	// SETTING UP THE DELAY
+	MOV r8, 4                      		//RUN THE LOOP 4 TIMES
+
+        // perform a LOOP for delay
+LRD3:
+	SUB r8, r8, 1                       	// subtract 1 from R1
+    QBNE LRD3, r8, 0                      	// is R8 == 0? if no, then goto L1
+
+    QBNE LRD2, r1, 0              // is R1 == 0? if no, then goto L1
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    			//move out pin to
+	SBBO r2, r5, 0, 4   			// the p8_16 pin is HIGH
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION            // set up for  the delay
+    	// perform a LOOP for delay
+
+LRD4:
+	SUB r1, r1, 1                    // subtract 1 from R1
+	QBNE LRD4, r1, 0                  // is R1 == 0? if no, then goto L1
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    			//move out pin to
+	SBBO r2, r4, 0, 4   			// the p8_16 pin is LOW
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION            // set up for  the delay
+    	// perform a LOOP for delay
+
+LRD5:
+	SUB r1, r1, 1                    // subtract 1 from R1
+	QBNE LRD5, r1, 0                  // is R1 == 0? if no, then goto L1
+
+
+
+
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+			// SETTING THE REGISTER TO SHIFT RIGHT MODE TO LOAD THE DATA BITS
+RX_DATAS:
+
+	//Setting the value   the out pin S0
+	MOV  r2, 1 << 13  			//move out pin to
+	SBBO r2, r5, 0, 4   		// the p8_11 pin is HIGH
+
+	//Setting the value   the out pin S1
+	MOV  r2, 1 << 12  			//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_12 pin is LOW
+
+	//Setting the value the out pin OE1 and OE2
+	MOV  r2, 1 << 2     		//move out pin to
+	SBBO r2, r5, 0, 4    		// the P8_5 pin is HIGH
+
+
+	//Setting the value the out pin DS0
+	MOV  r2, 1 << 6    			//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
+	//DATA NOW GET OUT FROM THE Q0 PIN OF THE SHIFT REGISTER
+
+//***************************************************************************************
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    		//move out pin to
+	SBBO r2, r5, 0, 4   		// the p8_16 pin is HIGH
+
+	MOV r1,OFF_DURATION 			// set up for a delay
+
+    // perform a half second delay
+LRDS1:
+     SUB r1, r1, 1				// subtract 1 from R1
+     QBNE LRDS1, r1, 0				// is R1 == 0? if no, then goto L1
 
 
 	//Setting the value the out pin CP
 	MOV  r2, 1 << 14    		//move out pin to
 	SBBO r2, r4, 0, 4   		// the p8_16 pin is LOW
 
+	// move the no of bits to be store in the memory OR THE NO. OF TIMES LOOP RUNS
+	MOV r0, 8
 
-	JMP TX_PLOAD				// AGAIN REPEAT THE SAME PROCESS FOR 5 TIMES MORE AS THIS REFLECT THE 32 BIT DATA IS SENT
+	// AS THE DATA IS BEING LOADED FROM THE SHIFT REGISTER TO PRU REGISTER IN SHIFT LEFT MODE
+
+	MOV r1,OFF_DURATION 			// set up for a delay
+
+        // perform a half second delay
+LRDS2:
+     SUB r1, r1, 1				// subtract 1 from R1
+     QBNE LRDS2, r1, 0				// is R1 == 0? if no, then goto L1
+
+DBIT_D:
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14			//move out pin to
+	SBBO r2, r5, 0, 4			// the p8_16 pin is HIGH
+
+	//set IN pin to INPUT
+	MOV  r3, GPIO1 | GPIO_DATAIN
+	LBBO r7, r3, 0, 7			// P8_04
+
+    MOV r1, OFF_DURATION 			// set up of delay
+
+LRDS3:
+	SUB r1, r1, 1				// subtract 1 from R1
+    QBNE LRDS3, r1, 0				// is R1 == 0? if no, then goto L1
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14			//move out pin to
+	SBBO r2, r4, 0, 4			// the p8_16 pin is LOW
+
+
+    // TAKE THE ACK BIT INTO THE REGISTER FOR THE CONFORMATION OF HAND SAKING
+	QBBS DBIT_SET, r7.t0			// if the bit is high, jump to LED_HIGH
+	QBBC DBIT_CLR, r7.t0			// if the bit is low,  jump to LED_LOW
+
+
+	// STORE 1 VALUE IN THE REGISTER
+DBIT_SET:
+	//PERFORM THE LEFT SHIFT OPERATION ON THE REGISTER R6
+	LSL r11, r11, 1
+
+    ADD  r11, r11.b0, 0b00000001
+
+    MOV r1, OFF_DURATION 			// set up of delay
+
+LRDS4:
+ 	SUB r1, r1, 1				// subtract 1 from R1
+    QBNE LRDS4, r1, 0				// is R1 == 0? if no, then goto L1
+
+
+    SUB r0, r0, 1
+    QBEQ RX_DTEST, r0, 0
+    QBNE DBIT_D, r0, 0
+
+	//STORE 0 VALUE IN THE REGISTER
+BIT_CLR:
+	//PERFORM THE LEFT SHIFT OPERATION ON THE REGISTER R6
+	LSL r11, r11, 1
+
+    MOV r1, OFF_DURATION 			// set up of delay
+
+LRDS5:
+	SUB r1, r1, 1				// subtract 1 from R1
+    QBNE LRDS5, r1, 0				// is R1 == 0? if no, then goto L1
+
+    SUB r0, r0, 1
+    QBEQ RX_DTEST1, r0, 0
+    QBNE DBIT_D, r0, 0
+
+//---------------------------------------------------------------------------------------
+//THE DATA GET LOADED TO THE REGISTER R11
+//---------------------------------------------------------------------------------------
+RX_DTEST1:
+
+	QBBC RX_MRD, r11.t1			// if the bit is low,  jump to RX_MRD (MASTER RESET AND AGAIN TEST IT FOR DATA BITS)
+	MOV R10.b1	, 0X6					// THIS LOOP WILL RUN FOR 6 TIME TO STORE ALL SIX BIT OF DATA IN ONE REGISTER OF PRU
+    QBEQ RX_WR2, R10.b0, 0
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+
+	//WRITING THE DATA IN THE THE PERMANENT REGISTER
+	//ONLY THE 6 BIT OF DATA IS OF USE OTHER DATA BIT LIKE BIT 0 IS MODE BIT AND BIT 1 IS ACK BIT
+	//WHICH IS COMMON TO BOTH THE COMMAND AND DATA MODE
+
+	//WRITE THE DATA BITS IN THE REGISTER R12
+RX_WR1:
+
+	MOV R12.t0, r11.t2
+	LSL R12, R12, 1
+	LSL R11, R11, 1
+
+    SUB R10.b1, R10.b1, 1
+    QBNE RX_WR1, r0, 0
+    SUB R10.b0, R10.b0, 1				//DECREASE THE VALUE BY ONE AS 6 BIT OF DATA WILL COME OUT FOR ONLY FIVE TIME LAST TIME 2 BIT OF
+    							        //DATA BIT WILL ARRIVE
+	JMP RX_ACK1							// TELL THE TX THAT DATA IS BEIGN RECEIVED
+
+	//WRITE THE DATA BITS IN THE REGISTER R12 FOR LAST 2 BIT OF DATA
+RX_WR2:
+	MOV R12.t0, r11.t2
+	LSL R12, R12, 1
+
+    //BY THIS STEP ALL THE 32 BIT OF DATA  WILL GET FILL IN THE R12 REGISTER THAT IS TX FROM OTHER BB BLACK
+    MOV R12.t0, r11.t3
+
+    JMP EXIT
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------
+//***************************************************************************************
+
+
+	// THIS WILL SEND THE HIGH ACK AT BIT 1 OF THE SHIFT REGISTER TELLING THAT IT HAD RECEIVED THE DATA CORRECTLY
+
+RX_ACK1:
+	// LOAD THE  SHIFT REGISTER IN SHIFT RIGHT MODE
+
+	//Setting the value the out pin S0
+	MOV  r2, 1 << 13     		//move out pin to
+	SBBO r2, r5, 0, 4    		// the p8_11 pin is HIGH
+
+	//Setting the value the out pin S1
+	MOV  r2, 1 << 12     		//move out pin to
+	SBBO r2, r4, 0, 4    		// the p8_12 pin is LOW
+
+	//Setting the value the out pin OE1 and OE2
+	MOV  r2, 1 << 2     		//move out pin to
+	SBBO r2, r5, 0, 4    		// the P8_5 pin is HIGH
+
+	//Setting the value the out pin MR
+	MOV  r2, 1 << 15     		//move out pin to
+	SBBO r2, r5, 0, 4    		// the p8_15 pin is HIGH
+
+	//Setting the value the out pin DS0
+	MOV  r2, 1 << 6    			//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
+//***************************************************************************************
+	//NOW THE DATA OUT MODE TO THE  SHIFT REGISTER
+
+	// THE MODE OF 74HC299 FROM LOAD TO SHIFT RIGHT MODE
+
+	// SETTING UP THE DELAY
+	MOV r1,OFF_DURATION             // set up for  the delay
+
+    	// perform a LOOP for delay
+LRA12:
+	SUB r1, r1, 1               // subtract 1 from R1
+	QBNE LRA12, r1, 0             // is R1 == 0? if no, then goto L1
+
+RX_OUT1:
+	// NOW THE DATA STORE IN THE REGISTER IS MADE TO THE DATA PIN OF THE SHIFT REGISTER R6
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    		//move out pin to
+	SBBO r2, r5, 0, 4   		// the p8_16 pin is HIGH
+
+	//Setting the value the out pin DS0
+	MOV  r2, 1 << 6    			//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION        // set up for  the delay
+
+    // perform a LOOP for delay
+LRA13:
+	SUB r1, r1, 1               // subtract 1 from R1
+   	QBNE LRA13, r1, 0             // is R1 == 0? if no, then goto L1
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    		//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_16 pin is LOW
+
+
+//***************************************************************************************
+JUMP_ACK:
+	//CHECK FOR THE CONTROL BIT WRITTING TO THE SLAVE SHIFT REGISTER
+   	QBBS RX_ASET, r6.t23    	// if the bit is high, jump to BIT_HIGH
+   	QBBC RX_ACLR, r6.t23        // if the bit is low,  jump to BIT_LOW
+  // THIS IS THE RX CODE
+
+//***************************************************************************************
+
+RX_ASET:
+
+	//Setting the value the out pin DS0
+	MOV  r2, 1 << 6    			//move out pin to
+	SBBO r2, r5, 0, 4   		// the p8_3 pin is HIGH
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION         // set up for  the delay
+
+    	// perform a LOOP for delay
+LRA14:
+	SUB r1, r1, 1               // subtract 1 from R1
+    QBNE LRA14, r1, 0             // is R1 == 0? if no, then goto L1
+
+	//shift the bit store in the r6 to the RIGHT
+	LSL  r6, r6, 1
+
+	// decrement the value of bits to be store and check its value
+	SUB  r0, r0, 1
+    QBEQ RX_E1, r0, 0
+    QBNE RX_OUT1, r0, 0
+
+RX_ACLR:
+
+	//Setting the value the out pin DS0
+	MOV  r2, 1 << 6    		//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION            // set up for  the delay
+    	// perform a LOOP for delay
+
+LRA15:
+	SUB r1, r1, 1                   // subtract 1 from R1
+	QBNE LRA15, r1, 0                  // is R1 == 0? if no, then goto L1
+
+	//shift the bit store in the r6 to the RIGHT
+	LSL  r6, r6, 1
+
+	// decrement the value of bits to be store and check its value
+	SUB  r0, r0, 1
+	QBEQ RX_E1, r0, 0
+    QBNE RX_OUT1, r0, 0
+
+
+//***************************************************************************************
+// CHANGING THE STATE OF THE ENABLE PIN
+
+RX_E1:
+	//Setting the value the out pin DS0
+	MOV  r2, 1 << 6    			//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_3 pin is LOW
+
+	//Setting the value the out pin OE1 and OE2
+	MOV  r2, 1 << 2     		//move out pin to
+	SBBO r2, r4, 0, 4   		// the P8_5 pin is LOW
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    		//move out pin to
+	SBBO r2, r5, 0, 4   		// the p8_16 pin is HIGH
+
+	// SETTING UP THE DELAY
+	MOV r1, OFF_DURATION        // set up for a .9 second delay
+
+    // perform a LOOP for delay
+LRA1E1:
+	SUB r1, r1, 1                // subtract 1 from R1
+
+	// SETTING UP THE DELAY
+	MOV r8, 10                      		//RUN THE LOOP 4 TIMES
+LRA1E2:
+	SUB r8, r8, 1                       	// subtract 1 from R1
+    QBNE LRA1E2, r8, 0                      	// is R8 == 0? if no, then goto L1
+    QBNE LRA1E1, r1, 0              // is R1 == 0? if no, then goto L1
+
+
+	//Setting the value the out pin CP
+	MOV  r2, 1 << 14    		//move out pin to
+	SBBO r2, r4, 0, 4   		// the p8_16 pin is LOW
+//***************************************************************************************
+
+
+	JMP RX_MRD					// AFTER THE ACK IS SENT MOVE TO RX_MRD TO AGAIN RECEIVE THE DATA BITS
+
+
 
 
 
@@ -753,3 +1019,6 @@ EXIT:
 	SBBO r2, r5, 0, 4   			// the p8_20 pin is HIGH
 
 	HALT
+
+
+
