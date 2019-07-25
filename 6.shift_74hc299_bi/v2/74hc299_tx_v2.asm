@@ -22,7 +22,7 @@
 
 #define DS0     6   			/* P8_3  38 GPIO 1_6  mode 7 OUTPUT */
 #define INPUT   7   			/* P8_4  39 GPIO 1_7  mode 7 INPUT  */
-#define OE		2   			/* P8_5  34 GPIO 1_2  mode 7 OUTPUT */ //OE1 AND OE2
+#define OE	2   			/* P8_5  34 GPIO 1_2  mode 7 OUTPUT */ //OE1 AND OE2
 #define S0      13  			/* P8_11 45 GPIO 1_13 mode 7 OUTPUT */
 #define S1      12  			/* P8_12 44 GPIO 1_12 mode 7 OUTPUT */
 #define MR      15  			/* P8_15 47 GPIO 1_15 mode 7 OUTPUT */
@@ -45,18 +45,18 @@ start:
   	sbco r0, CPRUCFG, 4, 4   	// enable OCP master port
 
 	// FOR DATA REGISTER BITS FROM MASTER (SENDING DATA FROM TX TO RX)
-	// STROBE  RD/WR   ACK		DESCRIPTION
-	//	0		0		0		SLAVE  MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE MASTER
-	//	0		0		1		SLAVE  MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT IS RECEIVED FROM THE MASTER
-	//	0		1		0		SLAVE  MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE SLAVE
-	//	0		1		1		SLAVE  MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT IS RECEIVED FROM THE SLAVE
-	//	1		0		0		MASTER MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE SLAVE
-	//	1		0		1		MASTER MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT IS RECEIVED FROM THE SLAVE
-	//	1		1		0		MASTER MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE MASTER
-	//	1		1		1		MASTER MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT IS RECEIVED FROM THE MASTER
+	// STROBE  	RD/WR   ACK		DESCRIPTION
+	//	0	0	0		SLAVE  MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE MASTER
+	//	0	0	1		SLAVE  MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT IS RECEIVED FROM THE MASTER
+	//	0	1	0		SLAVE  MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE SLAVE
+	//	0	1	1		SLAVE  MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT IS RECEIVED FROM THE SLAVE
+	//	1	0	0		MASTER MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE SLAVE
+	//	1	0	1		MASTER MODE, MASTER IS WRITING, SLAVE  IS STORING DATA, ACK BIT IS RECEIVED FROM THE SLAVE
+	//	1	1	0		MASTER MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT TO BE RECEIVED FROM THE MASTER
+	//	1	1	1		MASTER MODE, SLAVE  IS WRITING, MASTER IS STORING DATA, ACK BIT IS RECEIVED FROM THE MASTER
 
 	// FOR DATA REGISTER ON THE DATA LINES in shift register
-	// DESCRIPTION    BIT NO.    STATE
+	// DESCRIPTION  	  BIT NO. 		      STATE
 	//	DATA 			0			-
 	//	DATA			1			-
 	//	DATA			2			-
@@ -78,12 +78,13 @@ start:
 
 
 //example data of the register that will be transfer via shift register
-    MOV R9  	, 0X0				//MOV O TO THE REGISTER
-    MOV R10.b0 	, 0X4				//MOV 4 TO THE REGISTER ,AS THE DATA NEED TO SENT 4 TIMES AS 8 BIT AT A TIME WRITE MODE
-    MOV R10.b1 	, 0X4				//MOV 4 TO THE REGISTER ,AS THE DATA NEED TO READ 4 TIMES AS 8 BIT AT A TIME READ MODE
-	MOV R11.b0 	, 0b00000000		//MOV O TO THE REGISTER
-	MOV R12 	, 0X0F0F0F0F		//MOV THE DATA THAT NEED TO BE SENT
+    	MOV R9  	, 0x0				//MOV O TO THE REGISTER
+    	MOV R10.b0 	, 0x4				//MOV 4 TO THE REGISTER ,AS THE DATA NEED TO SENT 4 TIMES AS 8 BIT AT A TIME WRITE MODE
+    	MOV R10.b1 	, 0x4				//MOV 4 TO THE REGISTER ,AS THE DATA NEED TO READ 4 TIMES AS 8 BIT AT A TIME READ MODE
+	MOV R11.b0 	, 0b00000000			//MOV O TO THE REGISTER
+	MOV R12 	, 0xA0A0A001			//MOV THE DATA THAT NEED TO BE SENT
 	MOV R9		, R12
+	MOV r13     	, 0x0
 
 	//set DS0 pin to ouput
 	MOV r3, GPIO1 | GPIO_OE
@@ -169,6 +170,7 @@ TX_MRW1:
 //THIS IS MASTER, WRITE
 //MASTER IS WRITING TO SLAVE
 
+
 	//Setting the value the out pin STROBE
 	MOV  r2, 1 << 5     							//move out pin to
 	SBBO r2, r5, 0, 4    							// the p8_22 pin is HIGH
@@ -177,7 +179,10 @@ TX_MRW1:
 	MOV  r2, 1 << 4     							//move out pin to
 	SBBO r2, r4, 0, 4    							// the p8_23 pin is LOW
 
-	JMP RDWR
+	MOV  r8.b0, 0b00000001
+	//CALL DELAY0
+
+	JMP TX_RDWR
 
 TX_MRW2:
 ////THIS IS MASTER, READ
@@ -191,6 +196,8 @@ TX_MRW2:
 	MOV  r2, 1 << 4     							//move out pin to
 	SBBO r2, r5, 0, 4    							// the p8_23 pin is high
 
+	MOV  r8.b0, 0b00000010
+
 	CALL DELAY0
 
 	//Setting the value the out pin STROBE
@@ -199,34 +206,34 @@ TX_MRW2:
 
 TX_RDWR:
 // STORE THE VALUE OF R4 AND R5 REGISTER IN R8
-	OR r8, r4, r5
+//	OR r8, r4, r5
 
-	QBBS TX_RDWR1,  r8.t5		  				  	//CHECK THE STROBE SIGNAL AS SET AS MASTER
-	QBBC TX_SACK,   r8.t5							//check FOR THE STROBE SIGNAL TO SET AS SLAVE
+	QBBS TX_RDWR1,  r8.t0		  				  	//CHECK THE STROBE SIGNAL AS SET AS MASTER
+	QBBC TX_SACK,   r8.t0							//check FOR THE STROBE SIGNAL TO SET AS SLAVE
 
 TX_RDWR1:
-	QBBC TX_WRITE, r8.t4
-	QBBS TX_SACK,  r8.t4
+	QBBC TX_WRITE, r8.t1
+	QBBS TX_SACK,  r8.t1
 
 TX_ACK:
 	QBEQ EXIT, R10.b0, 0							//IT MEANS THAT ALL THE DATA IS BEEN  SENT TO SLAVE
 
 	//set IN pin to INPUT
 	MOV  r3, GPIO1 | GPIO_DATAIN
-	LBBO r7, r3, 0, 4								// P8_24
+	LBBO r7, r3, 0, 4							// P8_24
 
-	QBBC TX_MRW1 , r7.t1							//AS THE BIT GOES HIGH GO TO MASTER WRITE MODE
+	QBBS TX_MRW1 , r7.t1							//AS THE BIT GOES HIGH GO TO MASTER WRITE MODE
 
-	JMP  TX_ACK										// IF ACK IS NOT RECEIVED THEN IT WILL WRITE THE DATA AGAIN
+	JMP  TX_ACK								// IF ACK IS NOT RECEIVED THEN IT WILL WRITE THE DATA AGAIN
 
-TX_SACK:    //THIS CALLS TX_PLOAD WHEN IT RECEIVE ACK FROM SLAVE
+TX_SACK:    									//THIS CALLS TX_PLOAD WHEN IT RECEIVE ACK FROM SLAVE
 	//set IN pin to INPUT
 	MOV  r3, GPIO1 | GPIO_DATAIN
-	LBBO r7, r3, 0, 4								// P8_24
+	LBBO r7, r3, 0, 4							// P8_24
 
-	QBBC TX_PLOAD , r7.t1							//AS THE BIT GOES HIGH GO TO MASTER WRITE MODE
+	QBBS TX_PLOAD , r7.t1							//AS THE BIT GOES HIGH GO TO MASTER WRITE MODE
 
-	JMP TX_SACK										// WAIT FOR THE ACK BIT TO GET HIGH
+	JMP TX_SACK								// WAIT FOR THE ACK BIT TO GET HIGH
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 
@@ -254,7 +261,7 @@ TX_WRITE:
 	SBBO r2, r5, 0, 4    							// the p8_15 pin is HIGH
 
 	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    								//move out pin to
+	MOV  r2, 1 << 6    							//move out pin to
 	SBBO r2, r4, 0, 4   							// the p8_3 pin is LOW
 //***************************************************************************************
 	//NOW THE DATA TO THE CONNECTED SHIFT REGISTER IN SHIFT RIGHT MODE
@@ -263,23 +270,24 @@ TX_WRITE:
 
 TX_WRITE1:
 // NOW THE DATA STORE IN THE REGISTER IS MADE TO THE DATA PIN OF THE SHIFT REGISTER R6
-	CALL DELAY										// CALL THE DELAY FUNCTION
-	CALL CP_PULSE									// CALL FOR CLK PULSE
+	//CALL DELAY								// CALL THE DELAY FUNCTION
+
 
 	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    								//move out pin to
+	MOV  r2, 1 << 6    							//move out pin to
 	SBBO r2, r4, 0, 4   							// the p8_3 pin is LOW
 //***************************************************************************************
-
 	QBBC TX_CLR  , R12.t31
 	QBBS TX_SET  , R12.t31
 //***************************************************************************************
 
 TX_SET:
 	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    								//move out pin to
+	MOV  r2, 1 << 6    							//move out pin to
 	SBBO r2, r5, 0, 4   							// the p8_3 pin is HIGH
 
+	CALL DELAY0
+	CALL CP_PULSE								// CALL FOR CLK PULSE
 	//shift the bit store in the r6 to the RIGHT
 	LSL  r12, r12, 1
 
@@ -290,7 +298,8 @@ TX_SET:
 
 TX_CLR:
 	// BY DEFAULT DS0 PIN IS LOW
-
+	CALL DELAY0
+	CALL CP_PULSE								// CALL FOR CLK PULSE
 	//shift the bit store in the r6 to the RIGHT
 	LSL  r12, r12, 1
 
@@ -304,14 +313,14 @@ TX_CLR:
 
 TX_OUT_E:
 	//Setting the value the out pin DS0
-	MOV  r2, 1 << 6    								//move out pin to
+	MOV  r2, 1 << 6    							//move out pin to
 	SBBO r2, r4, 0, 4   							// the p8_3 pin is LOW
 
 	//Setting the value the out pin OE1 and OE2
 	MOV  r2, 1 << 2     							//move out pin to
 	SBBO r2, r4, 0, 4   							// the p8_5 pin is LOW
 
-	CALL	CP_PULSE								//GET THE RISING CLK PULSE
+	//CALL	CP_PULSE							//GET THE RISING CLK PULSE
 
 	SUB 	R10.b0 , R10.b0, 1 						//THIS TELL THAT THE LOOP IS RUN FOR ONLY 4 TIMES FOR 4 BYTE OF DATA
 
@@ -319,7 +328,9 @@ TX_OUT_E:
 	MOV  r2, 1 << 5     							//move out pin to
 	SBBO r2, r4, 0, 4    							// the p8_22 pin is low
 
-	JMP TX_ACK										//NOW CHECK FOR THE ACK BIT
+	CALL DELAY0
+
+	JMP TX_ACK								//NOW CHECK FOR THE ACK BIT
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 
@@ -346,17 +357,12 @@ TX_PLOAD:
 // SETTING THE REGISTER TO PARALLEL LOAD MODE
 
 TX_PLOAD1:
-
-
-	//Setting the value the out pin STROBE As master take control
-	MOV  r2, 1 << 5     							//move out pin to
-	SBBO r2, r5, 0, 4    							// the p8_22 pin is HIGH
-
-
-
+	//Setting the value the out pin S0
+	MOV  r2, 1 << 13     							//move out pin to
+	SBBO r2, r5, 0, 4    							// the p8_11 pin is HIGH
 
 	//Setting the value the out pin S1
-	MOV  r2, 1 << 12  								//move out pin to
+	MOV  r2, 1 << 12  							//move out pin to
 	SBBO r2, r5, 0, 4   							// the p8_12 pin is HIGH
 
 	//Setting the value the out pin OE1 and OE2
@@ -364,14 +370,14 @@ TX_PLOAD1:
 	SBBO r2, r4, 0, 4   							// the p8_5 pin is LOW
 
 	//CHECKING  IN THE DATA GIVEN BY RECEIVER SHIFT REGISTER
-	CALL 	DELAY									// CALL THE DELAY1 FUNCTION
-	CALL	CP_PULSE								//GET THE RISING CLK PULSE
+	CALL 	DELAY								// CALL THE DELAY1 FUNCTION
+	CALL	CP_PULSE							//GET THE RISING CLK PULSE
 //---------------------------------------------------------------------------------------
 //***************************************************************************************
 // SETTING THE REGISTER TO SHIFT RIGHT MODE TO LOAD THE DATA BITS
 TX_PLOAD2:
 	//Setting the value   the out pin S1
-	MOV  r2, 1 << 12  								//move out pin to
+	MOV  r2, 1 << 12  							//move out pin to
 	SBBO r2, r4, 0, 4   							// the p8_12 pin is LOW
 
 	//Setting the value the out pin OE1 and OE2
@@ -384,25 +390,43 @@ TX_PLOAD2:
 	MOV r0, NUMBER_OF_BITS
 // AS THE DATA IS BEING LOADED FROM THE SHIFT REGISTER TO PRU REGISTER IN SHIFT RIGHT MODE
 TX_DBIT:
-	CALL 	DELAY                 					// CALL THE DELAY FUNCTION
-	CALL	CP_PULSE								//GET THE RISING CLK PULSE
+	CALL 	DELAY                 						// CALL THE DELAY FUNCTION
+	CALL	CP_PULSE							//GET THE RISING CLK PULSE
 
 	//set IN pin to INPUT
 	MOV  r3, GPIO1 | GPIO_DATAIN
-	LBBO r7, r3, 0, 4								// P8_04
-	MOV  R7, R7 >> 7								// RIGHT SHIFT SEVEN TIMES
+	LBBO r7, r3, 0, 4							// P8_04
 
-	OR  R9, R7, R9									// OR THE DATA WITH R9 REGISTER
-	MOV R9, R9 << 1									// SHIFT LEFT DATA BY 1 BIT
+    QBBS TX_S, r7.t7			// if the bit is high, jump to TX_S
+    QBBC TX_C, r7.t7			// if the bit is low,  jump to TX_C
+
+TX_S:
+	//PERFORM THE LEFT SHIFT OPERATION ON THE REGISTER R6
+	LSL r13, r13, 1
+
+    ADD  r6, r6.b0, 0b00000001
+
 
     SUB r0, r0, 1
-
-    QBEQ TX_SACK, r0, 0
+    QBEQ TX_STB, r0, 0
     QBNE TX_DBIT,  r0, 0
+TX_C:
+	//PERFORM THE LEFT SHIFT OPERATION ON THE REGISTER R6
+	LSL r13, r13, 1
 
+    SUB r0, r0, 1
+    QBEQ TX_STB, r0, 0
+    QBNE TX_DBIT,  r0, 0
 //---------------------------------------------------------------------------------------
-//THE DATA GET LOADED SAVED TO THE REGISTER R9
+//THE DATA GET LOADED SAVED TO THE REGISTER R13
 //---------------------------------------------------------------------------------------
+
+TX_STB:
+	//Setting the value the out pin STROBE As master take control
+	MOV  r2, 1 << 5     							//move out pin to
+	SBBO r2, r5, 0, 4    							// the p8_22 pin is HIGH
+
+	JMP TX_ACK
 
 //-------------------------------------------------------------------------------------------------
 // THIS IS THE HALT OF THE PROGRAM WITH SUSSESSFUL INDICATION SHOWS  BLINKING OF LIGHT AT P8_20 PIN
@@ -420,9 +444,9 @@ EXIT:
 //	CALL FOR A DELAY
 DELAY0:
 		MOV r1, ON_DURATION         				// set up for  the delay
-	LRR:
+	LRR3:
 		SUB r1,r1, 1                 				// subtract 1 from R1
-		QBNE LRR, r1, 0
+		QBNE LRR3, r1, 0
 	RET
 
 //	CALL FOR A DELAY
@@ -436,8 +460,8 @@ DELAY:
 // CALL FOR CLK PULSE
 CP_PULSE:
 		//Setting the value the out pin CP
-		MOV  r2, 1 << 14    						//move out pin to
-		SBBO r2, r5, 0, 4   						// the p8_16 pin is HIGH
+		MOV  r2, 1 << 14    					//move out pin to
+		SBBO r2, r5, 0, 4   					// the p8_16 pin is HIGH
 
 		MOV r1, OFF_DURATION         				// set up for  the delay
 	DELAY3:
@@ -445,8 +469,8 @@ CP_PULSE:
 		QBNE DELAY3, r1, 0
 
 		//Setting the value the out pin CP
-		MOV  r2, 1 << 14    						//move out pin to
-		SBBO r2, r4, 0, 4   						// the p8_16 pin is LOW
+		MOV  r2, 1 << 14    					//move out pin to
+		SBBO r2, r4, 0, 4   					// the p8_16 pin is LOW
 
 		MOV r1, OFF_DURATION         				// set up for  the delay
 	DELAY4:
@@ -454,3 +478,4 @@ CP_PULSE:
 		QBNE DELAY4, r1, 0
 
 	RET
+
